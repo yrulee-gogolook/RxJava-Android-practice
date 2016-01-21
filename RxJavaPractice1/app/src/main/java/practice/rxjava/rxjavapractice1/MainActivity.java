@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import retrofit.GsonConverterFactory;
 import retrofit.Retrofit;
@@ -20,6 +21,7 @@ import retrofit.http.Query;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
@@ -53,34 +55,38 @@ public class MainActivity extends AppCompatActivity {
 		//  return all station
 
 		observable
+				.flatMap(new Func1<TotalResult, Observable<TotalResult.Result.StationType>>() {
+					@Override
+					public Observable<TotalResult.Result.StationType> call(TotalResult totalResult) {
+						return Observable.from(totalResult.result.results);
+					}
+				})
+				.filter(new Func1<TotalResult.Result.StationType, Boolean>() {
+					@Override
+					public Boolean call(TotalResult.Result.StationType stationType) {
+						return stationType.Destination.equals("南港展覽館站");
+					}
+				})
 				.subscribeOn(Schedulers.io())
 				.observeOn(AndroidSchedulers.mainThread())
-				.subscribe(new Subscriber<TotalResult>() {
+				.subscribe(new Subscriber<TotalResult.Result.StationType>() {
 					@Override
 					public void onCompleted() {
-						Log.d("RESULT", "Result received.");
+						Log.d("RESULT", "----Completed----");
 					}
 
 					@Override
 					public void onError(Throwable e) {
-						Log.d("RESULT", "Error occurred: "+e.getMessage());
-
+						Log.d("RESULT", "Error occurred: " + e.getMessage());
 					}
 
 					@Override
-					public void onNext(TotalResult totalResult) {
-						Log.d("RESULT", "===============");
-
-						ArrayList<TotalResult.Result.StationType> results = totalResult.result.results;
-						for(TotalResult.Result.StationType type : results){
-							Log.d("RESULT", "_id: "+type._id);
-							Log.d("RESULT", "Station: "+type.Station);
-							Log.d("RESULT", "Destination: "+type.Destination);
-							Log.d("RESULT", "UpdateTime: "+type.UpdateTime);
-							Log.d("RESULT", "---------------");
-						}
-
-						Log.d("RESULT", "===============");
+					public void onNext(TotalResult.Result.StationType stationType) {
+						Log.d("RESULT", "-----------------");
+						Log.d("RESULT", "_id: " + stationType._id);
+						Log.d("RESULT", "Station: " + stationType.Station);
+						Log.d("RESULT", "Destination: " + stationType.Destination);
+						Log.d("RESULT", "UpdateTime: " + stationType.UpdateTime);
 					}
 				});
 		
