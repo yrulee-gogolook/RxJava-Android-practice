@@ -5,6 +5,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,6 +18,9 @@ import retrofit.RxJavaCallAdapterFactory;
 import retrofit.http.GET;
 import retrofit.http.Query;
 import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -47,6 +51,38 @@ public class MainActivity extends AppCompatActivity {
 
 		Observable<TotalResult> observable = apiService.getData("resourceAquire", "55ec6d6e-dc5c-4268-a725-d04cc262172b");
 		//  return all station
+
+		observable
+				.subscribeOn(Schedulers.io())
+				.observeOn(AndroidSchedulers.mainThread())
+				.subscribe(new Subscriber<TotalResult>() {
+					@Override
+					public void onCompleted() {
+						Log.d("RESULT", "Result received.");
+					}
+
+					@Override
+					public void onError(Throwable e) {
+						Log.d("RESULT", "Error occurred: "+e.getMessage());
+
+					}
+
+					@Override
+					public void onNext(TotalResult totalResult) {
+						Log.d("RESULT", "===============");
+
+						ArrayList<TotalResult.Result.StationType> results = totalResult.result.results;
+						for(TotalResult.Result.StationType type : results){
+							Log.d("RESULT", "_id: "+type._id);
+							Log.d("RESULT", "Station: "+type.Station);
+							Log.d("RESULT", "Destination: "+type.Destination);
+							Log.d("RESULT", "UpdateTime: "+type.UpdateTime);
+							Log.d("RESULT", "---------------");
+						}
+
+						Log.d("RESULT", "===============");
+					}
+				});
 		
 	}
 
